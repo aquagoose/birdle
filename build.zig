@@ -53,8 +53,11 @@ pub fn build(b: *std.Build) void {
         }),
     });
 
-    const sdl3 = b.dependency("sdl3", .{});
+    const sdl3 = b.dependency("sdl3", .{ .target = target, .optimize = optimize });
     exe.root_module.addImport("sdl3", sdl3.module("sdl3"));
+
+    const zgl = b.dependency("zgl", .{ .target = target, .optimize = optimize });
+    exe.root_module.addImport("zgl", zgl.module("zgl"));
 
     // This declares intent for the executable to be installed into the
     // install prefix when running `zig build` (i.e. when executing the default
