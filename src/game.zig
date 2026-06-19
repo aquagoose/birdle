@@ -1,3 +1,5 @@
+const std = @import("std");
+
 const sdl = @import("sdl3");
 
 const framework = @import("framework.zig");
@@ -6,12 +8,17 @@ const render = @import("render.zig");
 pub const Game = struct {
     window: framework.Window,
     graphics: render.Graphics,
+    renderer: render.SpriteRenderer,
     
     pub fn init() !Game {
         const window = try framework.Window.init("birdle", 800, 600);
         const graphics = try render.Graphics.init(&window);
 
-        return Game { .window = window, .graphics = graphics };
+        const allocator = std.heap.DebugAllocator(.{}).init;
+        const renderer = try render.SpriteRenderer.init(allocator);
+        allocator.
+
+        return Game { .window = window, .graphics = graphics, .renderer = renderer };
     }
 
     pub fn deinit(self: *const Game) void {
@@ -30,7 +37,7 @@ pub const Game = struct {
                 }
             }
             
-            self.graphics.clear(1.0, 0.0, 0.0, 1.0);
+            self.graphics.clear(1.0, 0.5, 0.25, 1.0);
             self.graphics.present(1) catch {};
         }
     }
