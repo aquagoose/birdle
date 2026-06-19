@@ -36,9 +36,9 @@
             .url = "git+https://codeberg.org/7Games/zig-sdl3?ref=v0.2.1#7cf436e4a8622a0232e53ea5cb4df82e8cadaaaa",
             .hash = "sdl3-0.2.1-NmT1Q9YZKAAmuTV7fFuZHwH2jFQtw2uvVahQSMSD6DbK",
         },
-        .zgl = .{
-            .url = "https://github.com/ziglibs/zgl/archive/a73479a.tar.gz",
-            .hash = "zgl-1.1.0-p_NpAD9FCgAY_XDO_EXxSGJ5-n9b3deO0V-9z9HJKYTQ",
+        .zopengl = .{
+            .url = "git+https://github.com/zig-gamedev/zopengl#29908b1ba2d91baf91e348f6cd192630488d77b6",
+            .hash = "zopengl-0.6.0-dev-5-tnz32mDgB82moljuLD0fmbj1mU3NSCXjzttpmoV2iP",
         },
     },
     .paths = .{

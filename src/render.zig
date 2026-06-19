@@ -1,6 +1,7 @@
 const std = @import("std");
 
-const gl = @import("zgl");
+const zopengl = @import("zopengl");
+const gl = zopengl.bindings;
 const sdl = @import("sdl3");
 
 const math = @import("math");
@@ -12,8 +13,8 @@ const NUM_INDICES = 6;
 const MAX_VERTICES = NUM_VERTICES * MAX_SPRITES;
 const MAX_INDICES = NUM_INDICES * MAX_SPRITES;
 
-fn getProcAddress(comptime _: type, symbolName: [:0]const u8) ?*const anyopaque {
-    return sdl.video.gl.getProcAddress(symbolName);
+fn getProcAddress(name: [*:0]const u8) callconv(.c) ?*const anyopaque {
+    return sdl.video.gl.getProcAddress(std.mem.span(name));
 }
 
 pub const Graphics = struct {
@@ -25,7 +26,7 @@ pub const Graphics = struct {
 
         const ctx = try sdl.video.gl.Context.init(window_handle);
 
-        try gl.loadExtensions(void, getProcAddress);
+        try zopengl.loadCoreProfile(getProcAddress, 3, 3);
 
         return Graphics { ._window = window_handle, ._ctx = ctx };
     }
@@ -36,7 +37,7 @@ pub const Graphics = struct {
 
     pub fn clear(_: *const Graphics, r: f32, g: f32, b: f32, a: f32) void {
         gl.clearColor(r, g, b, a);
-        gl.clear(.{ .color = true });
+        gl.clear(gl.COLOR_BUFFER_BIT);
     }
 
     pub fn present(self: *const Graphics, present_interval: u8) !void {

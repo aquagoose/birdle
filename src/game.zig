@@ -8,17 +8,16 @@ const render = @import("render.zig");
 pub const Game = struct {
     window: framework.Window,
     graphics: render.Graphics,
-    renderer: render.SpriteRenderer,
     
     pub fn init() !Game {
         const window = try framework.Window.init("birdle", 800, 600);
         const graphics = try render.Graphics.init(&window);
 
-        const allocator = std.heap.DebugAllocator(.{}).init;
-        const renderer = try render.SpriteRenderer.init(allocator);
-        allocator.
+        //const allocator = std.heap.DebugAllocator(.{}).init;
+        //const renderer = try render.SpriteRenderer.init(allocator);
+        //allocator.
 
-        return Game { .window = window, .graphics = graphics, .renderer = renderer };
+        return Game { .window = window, .graphics = graphics };
     }
 
     pub fn deinit(self: *const Game) void {

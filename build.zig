@@ -39,7 +39,7 @@ pub fn build(b: *std.Build) void {
     // don't need and to put everything under a single module.
     const exe = b.addExecutable(.{
         .name = "birdle",
-        .use_llvm = true, // force llvm cause the gl bindings use tail calls which don't work on linux
+        //.use_llvm = true, // force llvm cause the gl bindings use tail calls which don't work on linux
         .root_module = b.createModule(.{
             // b.createModule defines a new module just like b.addModule but,
             // unlike b.addModule, it does not expose the module to consumers of
@@ -57,8 +57,8 @@ pub fn build(b: *std.Build) void {
     const sdl3 = b.dependency("sdl3", .{ .target = target, .optimize = optimize });
     exe.root_module.addImport("sdl3", sdl3.module("sdl3"));
 
-    const zgl = b.dependency("zgl", .{ .target = target, .optimize = optimize });
-    exe.root_module.addImport("zgl", zgl.module("zgl"));
+    const zopengl = b.dependency("zopengl", .{});
+    exe.root_module.addImport("zopengl", zopengl.module("root"));
 
     // This declares intent for the executable to be installed into the
     // install prefix when running `zig build` (i.e. when executing the default
