@@ -4,3 +4,6 @@
 [submodule "external/cpptrace"]
 	path = external/cpptrace
 	url = https://github.com/jeremy-rifkin/cpptrace
+[submodule "external/glm"]
+	path = external/glm
+	url = https://github.com/g-truc/glm
