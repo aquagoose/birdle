@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Framework/Graphics.h"
+
 #include <SDL3/SDL.h>
 
 namespace birdle
@@ -10,6 +12,8 @@ namespace birdle
         SDL_Window* _window{};
         
     public:
+        Graphics* graphics{}; // todo probably shouldn't be using raw pointers here
+        
         ~Game();
         
         void init();
