@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 4.2)
+cmake_minimum_required(VERSION 4.0)
 project(birdle)
 
 set(CMAKE_CXX_STANDARD 20)
@@ -12,3 +12,6 @@ add_executable(birdle ${BIRDLE_SRC})
 
 add_subdirectory(external/SDL)
 target_link_libraries(birdle PRIVATE SDL3::SDL3)
+
+add_subdirectory(external/glad)
+target_link_libraries(birdle PRIVATE glad)
