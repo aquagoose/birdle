@@ -9,3 +9,6 @@ file(GLOB_RECURSE BIRDLE_SRC CONFIGURE_DEPENDS
 )
 
 add_executable(birdle ${BIRDLE_SRC})
+
+add_subdirectory(external/SDL)
+target_link_libraries(birdle PRIVATE SDL3::SDL3)
