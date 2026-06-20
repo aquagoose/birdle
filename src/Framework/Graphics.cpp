@@ -18,8 +18,7 @@ namespace birdle
 
     Graphics::~Graphics()
     {
-        // nothing to do for now.
-        // maybe if i add sdlgpu or directx though so i'm gonna add this so its not forgotten later
+        SDL_GL_DestroyContext(_context);
     }
 
     void Graphics::clear(const float r, const float g, const float b, const float a)
