@@ -51,10 +51,6 @@ namespace birdle
         else
             _ebo = 0; // ensure the default value cause c++
         
-        glBindVertexArray(0);
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-        
         _shaderProgram = glCreateProgram();
         auto vShader = create_shader(GL_VERTEX_SHADER, vertexShader);
         auto fShader = create_shader(GL_FRAGMENT_SHADER, fragmentShader);
@@ -89,5 +85,32 @@ namespace birdle
             glDeleteBuffers(1, &_ebo);
         glDeleteBuffers(1, &_vbo);
         glDeleteVertexArrays(1, &_vao);
+    }
+
+    void BufferShaderSet::setup_shader_attribs(const size_t stride, const std::span<InputElement>& inputLayout)
+    {
+        glBindVertexArray(_vao);
+        
+        for (const auto& element : inputLayout)
+        {
+            auto loc = glGetAttribLocation(_shaderProgram, element.name.c_str());
+            glEnableVertexAttribArray(loc);
+            
+            switch (element.type)
+            {
+                case InputElementType::Float1:
+                    glVertexAttribPointer(loc, 1, GL_FLOAT, false, static_cast<GLsizei>(stride), reinterpret_cast<void*>(element.offset));
+                    break;
+                case InputElementType::Float2:
+                    glVertexAttribPointer(loc, 2, GL_FLOAT, false, static_cast<GLsizei>(stride), reinterpret_cast<void*>(element.offset));
+                    break;
+                case InputElementType::Float3:
+                    glVertexAttribPointer(loc, 3, GL_FLOAT, false, static_cast<GLsizei>(stride), reinterpret_cast<void*>(element.offset));
+                    break;
+                case InputElementType::Float4:
+                    glVertexAttribPointer(loc, 4, GL_FLOAT, false, static_cast<GLsizei>(stride), reinterpret_cast<void*>(element.offset));
+                    break;
+            }
+        }
     }
 }

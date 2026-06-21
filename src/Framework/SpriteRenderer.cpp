@@ -44,5 +44,24 @@ namespace birdle
     SpriteRenderer::SpriteRenderer()
     {
         _set = std::make_unique<BufferShaderSet>(MAX_VERTICES, MAX_INDICES, SPRITE_VSHADER_SRC, SPRITE_FSHADER_SRC);
+        
+        InputElement inputLayout[] = {
+            {
+                .name = "aPosition",
+                .type = InputElementType::Float2,
+                .offset = offsetof(Vertex, position)
+            },
+            {
+                .name = "aTexCoord",
+                .type = InputElementType::Float2,
+                .offset = offsetof(Vertex, texCoord)
+            },
+            {
+                .name = "aTint",
+                .type = InputElementType::Float4,
+                .offset = offsetof(Vertex, tint)
+            }
+        };
+        _set->setup_shader_attribs(sizeof(Vertex), inputLayout);
     }
 }
