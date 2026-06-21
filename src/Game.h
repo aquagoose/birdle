@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Framework/Graphics.h"
+#include "Framework/SpriteRenderer.h"
 
 #include <SDL3/SDL.h>
 
@@ -13,6 +14,7 @@ namespace birdle
         
     public:
         Graphics* graphics{}; // todo probably shouldn't be using raw pointers here
+        SpriteRenderer* renderer{};
         
         ~Game();
         

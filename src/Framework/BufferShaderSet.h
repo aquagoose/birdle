@@ -14,6 +14,7 @@ namespace birdle
         
         GLuint _shaderProgram;
         
+    public:
         BufferShaderSet(size_t numVertices, size_t numIndices, const std::string& vertexShader, const std::string& fragmentShader, bool dynamic = false);
         ~BufferShaderSet();
     };

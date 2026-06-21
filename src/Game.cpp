@@ -8,6 +8,7 @@ namespace birdle
 {
     Game::~Game()
     {
+        delete renderer;
         delete graphics;
         SDL_DestroyWindow(_window);
         SDL_Quit();
@@ -31,6 +32,7 @@ namespace birdle
             throw std::runtime_error(std::format("Failed to create window: {}", SDL_GetError()));
         
         graphics = new Graphics(_window);
+        renderer = new SpriteRenderer();
         
         _alive = true;
         while (_alive)
