@@ -8,3 +8,6 @@ add_executable(birdle WIN32 ${BIRDLE_SRC})
 
 add_subdirectory(lib/SDL)
 target_link_libraries(birdle PRIVATE SDL3::SDL3)
+
+add_subdirectory(lib/glm)
+target_link_libraries(birdle PRIVATE glm::glm)
