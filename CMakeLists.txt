@@ -1,10 +1,12 @@
-cmake_minimum_required(VERSION 3.25)
+cmake_minimum_required(VERSION 4.0)
 project(birdle)
 
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 23)
 
 file(GLOB_RECURSE BIRDLE_SRC CONFIGURE_DEPENDS src/*.h src/*.cpp)
+file(GLOB_RECURSE BIRDLE_MODULES CONFIGURE_DEPENDS src/*.cppm)
 add_executable(birdle WIN32 ${BIRDLE_SRC})
+target_sources(birdle PRIVATE FILE_SET CXX_MODULES FILES ${BIRDLE_MODULES})
 
 add_subdirectory(lib/SDL)
 target_link_libraries(birdle PRIVATE SDL3::SDL3)

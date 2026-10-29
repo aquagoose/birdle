@@ -1,5 +1,6 @@
-#include "Framework/Renderer.h"
-#include "Framework/Window.h"
+import Framework;
+
+#include <SDL3/SDL.h>
 
 int main(int argc, char* argv[])
 {
