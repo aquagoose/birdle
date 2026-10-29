@@ -11,6 +11,12 @@ namespace bdl
         Window& _window;
         SDL_GLContext _context;
 
+        // sprite renderer buffers
+        GLuint _vao;
+        GLuint _vbo;
+        GLuint _ebo;
+        GLuint _program;
+
     public:
         explicit Renderer(Window& window);
         ~Renderer();
