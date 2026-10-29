@@ -2,6 +2,8 @@ module;
 
 #include <glad/gl.h>
 #include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 #include <SDL3/SDL.h>
 
 #include <vector>
@@ -143,6 +145,18 @@ void main()
             glDetachShader(_program, vShader);
             glDeleteShader(fShader);
             glDeleteShader(vShader);
+
+            GLuint aPosition = glGetAttribLocation(_program, "aPosition");
+            glEnableVertexAttribArray(aPosition);
+            glVertexAttribPointer(aPosition, 2, GL_FLOAT, false, sizeof(Vertex), reinterpret_cast<void*>(offsetof(Vertex, Position)));
+
+            GLuint aTexCoord = glGetAttribLocation(_program, "aTexCoord");
+            glEnableVertexAttribArray(aTexCoord);
+            glVertexAttribPointer(aTexCoord, 2, GL_FLOAT, false, sizeof(Vertex), reinterpret_cast<void*>(offsetof(Vertex, TexCoord)));
+
+            GLuint aTint = glGetAttribLocation(_program, "aTint");
+            glEnableVertexAttribArray(aTint);
+            glVertexAttribPointer(aTint, 4, GL_FLOAT, false, sizeof(Vertex), reinterpret_cast<void*>(offsetof(Vertex, Tint)));
         }
 
         ~Renderer()
@@ -207,17 +221,20 @@ void main()
                 numSprites++;
             }
 
-            Flush(numSprites);
-
             glUnmapBuffer(GL_ARRAY_BUFFER);
             glUnmapBuffer(GL_ELEMENT_ARRAY_BUFFER);
+
+            Flush(numSprites);
 
             _sprites.clear();
         }
 
         void Flush(uint32_t numSprites) const
         {
+            glm::mat4 projection = glm::ortho(0.0f, 800.0f, 600.0f, 0.0f, -1.0f, 1.0f);
+
             glUseProgram(_program);
+            glUniformMatrix4fv(glGetUniformLocation(_program, "uProjection"), 1, false, glm::value_ptr(projection));
             glDrawElements(GL_TRIANGLES, static_cast<GLint>(numSprites * NumIndices), GL_UNSIGNED_SHORT, nullptr);
         }
     };
