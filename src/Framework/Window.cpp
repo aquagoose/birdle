@@ -5,19 +5,25 @@
 
 namespace bdl
 {
-    Window::Window(const std::string& title, int32_t width, int32_t height)
+    Window::Window(const std::string& title, const glm::ivec2& size)
     {
         if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS))
             throw std::runtime_error(std::format("Failed to initialize SDL: {}", SDL_GetError()));
 
-        _window = SDL_CreateWindow(title.c_str(), width, height, SDL_WINDOW_OPENGL);
-        if (!_window)
+        SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
+        SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+        SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
+        SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 0);
+        SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 0);
+
+        Handle = SDL_CreateWindow(title.c_str(), size.x, size.y, SDL_WINDOW_OPENGL);
+        if (!Handle)
             throw std::runtime_error(std::format("Failed to create window: {}", SDL_GetError()));
     }
 
     Window::~Window()
     {
-        SDL_DestroyWindow(_window);
+        SDL_DestroyWindow(Handle);
         SDL_Quit();
     }
 }

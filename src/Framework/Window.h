@@ -1,16 +1,19 @@
 #pragma once
 
 #include <SDL3/SDL.h>
+#include <glm/glm.hpp>
 #include <string>
 
 namespace bdl
 {
     class Window final
     {
-        SDL_Window* _window;
+        friend class Renderer;
+
+        SDL_Window* Handle;
 
     public:
-        Window(const std::string& title, int32_t width, int32_t height);
+        Window(const std::string& title, const glm::ivec2& size);
         ~Window();
     };
 }
