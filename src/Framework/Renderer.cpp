@@ -45,7 +45,7 @@ void main()
     static constexpr uint32_t NumVertices = 4; // number of vertices per sprite
     static constexpr uint32_t NumIndices = 6; // number of indices per sprite
 
-    struct Sprite
+    struct Vertex
     {
         glm::vec2 Position;
         glm::vec2 TexCoord;
@@ -86,11 +86,11 @@ void main()
 
         glGenBuffers(1, &_vbo);
         glBindBuffer(GL_ARRAY_BUFFER, _vbo);
-        glBufferData(GL_ARRAY_BUFFER, MaxSprites * NumVertices * sizeof(Sprite), nullptr, GL_DYNAMIC_DRAW);
+        glBufferData(GL_ARRAY_BUFFER, MaxSprites * NumVertices * sizeof(Vertex), nullptr, GL_DYNAMIC_DRAW);
 
         glGenBuffers(1, &_ebo);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _ebo);
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, MaxSprites * NumIndices * sizeof(int16_t), nullptr, GL_DYNAMIC_DRAW);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, MaxSprites * NumIndices * sizeof(uint16_t), nullptr, GL_DYNAMIC_DRAW);
 
         _program = glCreateProgram();
         GLuint vShader = CreateShader(GL_VERTEX_SHADER, VertexShader);
@@ -131,9 +131,62 @@ void main()
         glClear(GL_COLOR_BUFFER_BIT);
     }
 
+    void Renderer::DrawSprite(const Sprite& sprite)
+    {
+        _sprites.push_back(sprite);
+    }
+
     void Renderer::Present(uint32_t swapInterval)
     {
+        Render();
+
         SDL_GL_SetSwapInterval(static_cast<int>(swapInterval));
         SDL_GL_SwapWindow(_window.Handle);
+    }
+
+    void Renderer::Render()
+    {
+        // don't even bother
+        if (_sprites.empty())
+            return;
+
+        glBindVertexArray(_vao);
+
+        auto vertices = static_cast<Vertex*>(glMapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY));
+        auto indices = static_cast<uint16_t*>(glMapBuffer(GL_ELEMENT_ARRAY_BUFFER, GL_WRITE_ONLY));
+
+        uint32_t numSprites = 0;
+        for (const auto& sprite : _sprites)
+        {
+            uint32_t vOffset = numSprites * NumVertices;
+            uint32_t iOffset = numSprites * NumIndices;
+
+            vertices[vOffset + 0] = { .Position = sprite.TopLeft, .TexCoord = { 0, 0 }, .Tint = sprite.Tint };
+            vertices[vOffset + 1] = { .Position = sprite.TopRight, .TexCoord = { 1, 0 }, .Tint = sprite.Tint };
+            vertices[vOffset + 2] = { .Position = sprite.BottomRight, .TexCoord = { 1, 1 }, .Tint = sprite.Tint };
+            vertices[vOffset + 3] = { .Position = sprite.BottomLeft, .TexCoord = { 0, 1 }, .Tint = sprite.Tint };
+
+            indices[iOffset + 0] = static_cast<uint16_t>(0 + vOffset);
+            indices[iOffset + 1] = static_cast<uint16_t>(1 + vOffset);
+            indices[iOffset + 2] = static_cast<uint16_t>(3 + vOffset);
+            indices[iOffset + 3] = static_cast<uint16_t>(1 + vOffset);
+            indices[iOffset + 4] = static_cast<uint16_t>(2 + vOffset);
+            indices[iOffset + 5] = static_cast<uint16_t>(3 + vOffset);
+
+            numSprites++;
+        }
+
+        Flush(numSprites);
+
+        glUnmapBuffer(GL_ARRAY_BUFFER);
+        glUnmapBuffer(GL_ELEMENT_ARRAY_BUFFER);
+
+        _sprites.clear();
+    }
+
+    void Renderer::Flush(uint32_t numSprites) const
+    {
+        glUseProgram(_program);
+        glDrawElements(GL_TRIANGLES, static_cast<GLint>(numSprites * NumIndices), GL_UNSIGNED_SHORT, nullptr);
     }
 }

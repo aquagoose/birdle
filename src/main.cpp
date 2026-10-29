@@ -21,6 +21,13 @@ int main(int argc, char* argv[])
         }
 
         renderer->Clear(1.0f, 0.5f, 0.25f, 1.0f);
+        renderer->DrawSprite({
+            .TopLeft = {0, 0},
+            .TopRight = {100, 0},
+            .BottomLeft = {0, 100},
+            .BottomRight = {100, 100},
+            .Tint = {1.0f, 1.0f, 1.0f, 1.0f}
+        });
         renderer->Present(1);
     }
 
