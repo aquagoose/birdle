@@ -11,3 +11,6 @@ target_link_libraries(birdle PRIVATE SDL3::SDL3)
 
 add_subdirectory(lib/glm)
 target_link_libraries(birdle PRIVATE glm::glm)
+
+add_subdirectory(lib/glad)
+target_link_libraries(birdle PRIVATE glad)
