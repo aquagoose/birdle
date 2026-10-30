@@ -57,6 +57,8 @@ export namespace bdl
             size_t read = fread(_fontBuf, 1, size, f);
             assert(read == size);
 
+            fclose(f);
+
             if (!stbtt_InitFont(&_font, _fontBuf, 0))
                 throw std::runtime_error("Failed to initialize font!");
 
