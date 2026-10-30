@@ -18,9 +18,12 @@ export namespace bdl
         friend class Renderer;
 
         GLuint _handle;
+        glm::ivec2 _size;
 
         explicit Texture(void* data, glm::ivec2 size, PixelFormat format)
         {
+            _size = size;
+
             GLint internalFormat;
             GLenum pixelFormat;
             GLenum dataType;
@@ -51,5 +54,7 @@ export namespace bdl
         }
 
         [[nodiscard]] inline GLuint Handle() const { return _handle; }
+
+        [[nodiscard]] inline glm::ivec2 Size() const { return _size; }
     };
 }

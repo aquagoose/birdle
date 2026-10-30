@@ -90,11 +90,29 @@ void main()
     export struct Sprite
     {
         bdl::Texture& Texture;
-        glm::ivec2 TopLeft;
-        glm::ivec2 TopRight;
-        glm::ivec2 BottomLeft;
-        glm::ivec2 BottomRight;
-        glm::ivec4 Tint;
+        glm::vec2 TopLeft;
+        glm::vec2 TopRight;
+        glm::vec2 BottomLeft;
+        glm::vec2 BottomRight;
+        glm::vec4 Tint;
+
+        Sprite(bdl::Texture& texture, const glm::vec2& topLeft, const glm::vec2& topRight, const glm::vec2& bottomLeft, const glm::vec2& bottomRight, const glm::vec4& tint) :
+            Texture(texture),
+            TopLeft(topLeft),
+            TopRight(topRight),
+            BottomLeft(bottomLeft),
+            BottomRight(bottomRight),
+            Tint(tint) {}
+
+        Sprite(bdl::Texture& texture, const glm::vec2& position, const glm::vec4& tint = glm::vec4(1.0f))
+            : Texture(texture), Tint(tint)
+        {
+            glm::ivec2 texSize = Texture.Size();
+            TopLeft = position;
+            TopRight = { position.x + texSize.x, position.y };
+            BottomLeft = { position.x, position.y + texSize.y };
+            BottomRight = { position.x + texSize.x, position.y + texSize.y };
+        }
     };
 
     export class Renderer final
@@ -108,6 +126,8 @@ void main()
         GLuint _ebo;
         GLuint _program;
         std::vector<Sprite> _sprites;
+        std::array<Vertex, MaxSprites * NumVertices> _vertices{};
+        std::array<uint16_t, MaxSprites * NumIndices> _indices{};
 
     public:
         explicit Renderer(Window& window) : _window(window)
@@ -196,6 +216,7 @@ void main()
             glClear(GL_COLOR_BUFFER_BIT);
         }
 
+
         void DrawSprite(const Sprite& sprite)
         {
             _sprites.push_back(sprite);
@@ -216,11 +237,6 @@ void main()
             if (_sprites.empty())
                 return;
 
-            glBindVertexArray(_vao);
-
-            auto vertices = static_cast<Vertex*>(glMapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY));
-            auto indices = static_cast<uint16_t*>(glMapBuffer(GL_ELEMENT_ARRAY_BUFFER, GL_WRITE_ONLY));
-
             std::optional<std::reference_wrapper<Texture>> currentTexture{};
             uint32_t numSprites = 0;
             for (const auto& sprite : _sprites)
@@ -236,23 +252,20 @@ void main()
                 uint32_t vOffset = numSprites * NumVertices;
                 uint32_t iOffset = numSprites * NumIndices;
 
-                vertices[vOffset + 0] = { .Position = sprite.TopLeft, .TexCoord = { 0, 0 }, .Tint = sprite.Tint };
-                vertices[vOffset + 1] = { .Position = sprite.TopRight, .TexCoord = { 1, 0 }, .Tint = sprite.Tint };
-                vertices[vOffset + 2] = { .Position = sprite.BottomRight, .TexCoord = { 1, 1 }, .Tint = sprite.Tint };
-                vertices[vOffset + 3] = { .Position = sprite.BottomLeft, .TexCoord = { 0, 1 }, .Tint = sprite.Tint };
+                _vertices[vOffset + 0] = { .Position = sprite.TopLeft, .TexCoord = { 0, 0 }, .Tint = sprite.Tint };
+                _vertices[vOffset + 1] = { .Position = sprite.TopRight, .TexCoord = { 1, 0 }, .Tint = sprite.Tint };
+                _vertices[vOffset + 2] = { .Position = sprite.BottomRight, .TexCoord = { 1, 1 }, .Tint = sprite.Tint };
+                _vertices[vOffset + 3] = { .Position = sprite.BottomLeft, .TexCoord = { 0, 1 }, .Tint = sprite.Tint };
 
-                indices[iOffset + 0] = static_cast<uint16_t>(0 + vOffset);
-                indices[iOffset + 1] = static_cast<uint16_t>(1 + vOffset);
-                indices[iOffset + 2] = static_cast<uint16_t>(3 + vOffset);
-                indices[iOffset + 3] = static_cast<uint16_t>(1 + vOffset);
-                indices[iOffset + 4] = static_cast<uint16_t>(2 + vOffset);
-                indices[iOffset + 5] = static_cast<uint16_t>(3 + vOffset);
+                _indices[iOffset + 0] = static_cast<uint16_t>(0 + vOffset);
+                _indices[iOffset + 1] = static_cast<uint16_t>(1 + vOffset);
+                _indices[iOffset + 2] = static_cast<uint16_t>(3 + vOffset);
+                _indices[iOffset + 3] = static_cast<uint16_t>(1 + vOffset);
+                _indices[iOffset + 4] = static_cast<uint16_t>(2 + vOffset);
+                _indices[iOffset + 5] = static_cast<uint16_t>(3 + vOffset);
 
                 numSprites++;
             }
-
-            glUnmapBuffer(GL_ARRAY_BUFFER);
-            glUnmapBuffer(GL_ELEMENT_ARRAY_BUFFER);
 
             assert(currentTexture.has_value());
             Flush(*currentTexture, numSprites);
@@ -264,10 +277,16 @@ void main()
         {
             glm::mat4 projection = glm::ortho(0.0f, 800.0f, 600.0f, 0.0f, -1.0f, 1.0f);
 
+            glBindVertexArray(_vao);
             glUseProgram(_program);
+
+            glBufferSubData(GL_ARRAY_BUFFER, 0, numSprites * NumVertices * sizeof(Vertex), _vertices.data());
+            glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0, numSprites * NumIndices * sizeof(uint16_t), _indices.data());
+
             glUniformMatrix4fv(glGetUniformLocation(_program, "uProjection"), 1, false, glm::value_ptr(projection));
             glActiveTexture(GL_TEXTURE0);
             glBindTexture(GL_TEXTURE_2D, texture.Handle());
+
             glDrawElements(GL_TRIANGLES, static_cast<GLint>(numSprites * NumIndices), GL_UNSIGNED_SHORT, nullptr);
         }
     };
