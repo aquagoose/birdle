@@ -11,6 +11,7 @@ export import :Window;
 export import :Renderer;
 export import :Texture;
 export import :Types;
+export import :Font;
 
 export namespace bdl
 {

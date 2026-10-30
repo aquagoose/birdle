@@ -11,8 +11,13 @@ export namespace bdl
 {
     class BirdleGame : public Framework
     {
+        std::unique_ptr<Font> _font;
+
     public:
-        BirdleGame() : Framework("birdle", { 800, 600 }) {}
+        BirdleGame() : Framework("birdle", {800, 600})
+        {
+            _font = std::make_unique<Font>("/home/aqua/Code/C#/Glimpse/src/Glimpse.Assets/Fonts/Roboto-Regular.ttf");
+        }
 
         void Draw() override
         {
