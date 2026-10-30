@@ -10,6 +10,7 @@ export module Birdle.Framework;
 export import :Window;
 export import :Renderer;
 export import :Texture;
+export import :Types;
 
 export namespace bdl
 {
