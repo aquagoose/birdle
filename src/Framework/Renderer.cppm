@@ -19,6 +19,7 @@ module;
 export module Birdle.Framework:Renderer;
 import :Window;
 import :Texture;
+import :Types;
 
 namespace bdl
 {
@@ -66,7 +67,7 @@ void main()
     {
         glm::vec2 Position;
         glm::vec2 TexCoord;
-        glm::vec4 Tint;
+        Color Tint;
     };
 
     GLuint CreateShader(GLenum type, const char* source)
@@ -94,9 +95,9 @@ void main()
         glm::vec2 TopRight;
         glm::vec2 BottomLeft;
         glm::vec2 BottomRight;
-        glm::vec4 Tint;
+        Color Tint;
 
-        Sprite(bdl::Texture& texture, const glm::vec2& topLeft, const glm::vec2& topRight, const glm::vec2& bottomLeft, const glm::vec2& bottomRight, const glm::vec4& tint) :
+        Sprite(bdl::Texture& texture, const glm::vec2& topLeft, const glm::vec2& topRight, const glm::vec2& bottomLeft, const glm::vec2& bottomRight, const Color& tint) :
             Texture(texture),
             TopLeft(topLeft),
             TopRight(topRight),
@@ -104,15 +105,17 @@ void main()
             BottomRight(bottomRight),
             Tint(tint) {}
 
-        Sprite(bdl::Texture& texture, const glm::vec2& position, const glm::vec4& tint = glm::vec4(1.0f))
+        Sprite(bdl::Texture& texture, const glm::vec2& position, const glm::vec2& size, const Color& tint = Color::White())
             : Texture(texture), Tint(tint)
         {
-            glm::ivec2 texSize = Texture.Size();
             TopLeft = position;
-            TopRight = { position.x + texSize.x, position.y };
-            BottomLeft = { position.x, position.y + texSize.y };
-            BottomRight = { position.x + texSize.x, position.y + texSize.y };
+            TopRight = { position.x + size.x, position.y };
+            BottomLeft = { position.x, position.y + size.y };
+            BottomRight = { position.x + size.x, position.y + size.y };
         }
+
+        inline Sprite(bdl::Texture& texture, const glm::vec2& position, const Color& tint = Color::White())
+            : Sprite(texture, position, texture.Size(), tint) {}
     };
 
     export class Renderer final
@@ -128,6 +131,8 @@ void main()
         std::vector<Sprite> _sprites;
         std::array<Vertex, MaxSprites * NumVertices> _vertices{};
         std::array<uint16_t, MaxSprites * NumIndices> _indices{};
+
+        std::unique_ptr<Texture> _whiteTexture;
 
     public:
         explicit Renderer(Window& window) : _window(window)
@@ -185,6 +190,9 @@ void main()
             GLuint aTint = glGetAttribLocation(_program, "aTint");
             glEnableVertexAttribArray(aTint);
             glVertexAttribPointer(aTint, 4, GL_FLOAT, false, sizeof(Vertex), reinterpret_cast<void*>(offsetof(Vertex, Tint)));
+
+            uint8_t white[] = { 255, 255, 255, 255 };
+            _whiteTexture = CreateTexture(white, { 1, 1 }, PixelFormat::RGBA8);
         }
 
         ~Renderer()
@@ -195,6 +203,11 @@ void main()
             glDeleteVertexArrays(1, &_vao);
 
             SDL_GL_DestroyContext(_context);
+        }
+
+        std::unique_ptr<Texture> CreateTexture(void* data, const glm::ivec2& size, PixelFormat format)
+        {
+            return std::unique_ptr<Texture>(new Texture(data, size, format));
         }
 
         std::unique_ptr<Texture> CreateTexture(const std::string& path)
@@ -210,16 +223,35 @@ void main()
             return texture;
         }
 
-        void Clear(float r, float g, float b, float a)
+        void Clear(const Color& color)
         {
-            glClearColor(r, g, b, a);
+            glClearColor(color.R, color.G, color.B, color.A);
             glClear(GL_COLOR_BUFFER_BIT);
         }
 
 
-        void DrawSprite(const Sprite& sprite)
+        inline void DrawSprite(const Sprite& sprite)
         {
             _sprites.push_back(sprite);
+        }
+
+        inline void DrawFilledRect(const glm::vec2& pos, const glm::vec2& size, const Color& color)
+        {
+            _sprites.emplace_back(*_whiteTexture, pos, size, color);
+        }
+
+        void DrawRect(const glm::vec2& pos, const glm::vec2& size, int32_t borderSize, const Color& color)
+        {
+            // the lines are drawn in this order:
+            // ----1----
+            // |       |
+            // 2       4
+            // |       |
+            // ----3----
+            _sprites.emplace_back(*_whiteTexture, pos, glm::vec2(size.x, borderSize), color);
+            _sprites.emplace_back(*_whiteTexture, pos, glm::vec2(borderSize, size.y), color);
+            _sprites.emplace_back(*_whiteTexture, glm::vec2(pos.x, pos.y + size.y - borderSize), glm::vec2(size.x, borderSize), color);
+            _sprites.emplace_back(*_whiteTexture, glm::vec2(pos.x + size.x - borderSize, pos.y), glm::vec2(borderSize, size.y), color);
         }
 
         void Present(uint32_t swapInterval)
