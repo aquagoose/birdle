@@ -6,7 +6,7 @@ module;
 #include <stdexcept>
 #include <format>
 
-export module Framework:Window;
+export module Birdle.Framework:Window;
 
 export namespace bdl
 {

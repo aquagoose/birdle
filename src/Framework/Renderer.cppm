@@ -16,7 +16,7 @@ module;
 #include <optional>
 #include <functional>
 
-export module Framework:Renderer;
+export module Birdle.Framework:Renderer;
 import :Window;
 import :Texture;
 

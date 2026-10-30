@@ -4,7 +4,7 @@ module;
 #include <glm/glm.hpp>
 #include <stdexcept>
 
-export module Framework:Texture;
+export module Birdle.Framework:Texture;
 
 export namespace bdl
 {
