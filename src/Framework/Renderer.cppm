@@ -16,6 +16,8 @@ module;
 #include <optional>
 #include <functional>
 
+#define SWIZZLE_ZW(vec) glm::vec2(vec.z, vec.w)
+
 export module Birdle.Framework:Renderer;
 import :Window;
 import :Texture;
@@ -95,18 +97,20 @@ void main()
         glm::vec2 TopRight;
         glm::vec2 BottomLeft;
         glm::vec2 BottomRight;
+        std::optional<glm::ivec4> Source;
         Color Tint;
 
-        Sprite(bdl::Texture& texture, const glm::vec2& topLeft, const glm::vec2& topRight, const glm::vec2& bottomLeft, const glm::vec2& bottomRight, const Color& tint) :
+        Sprite(bdl::Texture& texture, const glm::vec2& topLeft, const glm::vec2& topRight, const glm::vec2& bottomLeft, const glm::vec2& bottomRight, const std::optional<glm::ivec4>& source, const Color& tint) :
             Texture(texture),
             TopLeft(topLeft),
             TopRight(topRight),
             BottomLeft(bottomLeft),
             BottomRight(bottomRight),
+            Source(source),
             Tint(tint) {}
 
-        Sprite(bdl::Texture& texture, const glm::vec2& position, const glm::vec2& size, const Color& tint = Color::White())
-            : Texture(texture), Tint(tint)
+        Sprite(bdl::Texture& texture, const glm::vec2& position, const glm::vec2& size, const std::optional<glm::ivec4>& source = {}, const Color& tint = Color::White())
+            : Texture(texture), Source(source), Tint(tint)
         {
             TopLeft = position;
             TopRight = { position.x + size.x, position.y };
@@ -114,8 +118,8 @@ void main()
             BottomRight = { position.x + size.x, position.y + size.y };
         }
 
-        inline Sprite(bdl::Texture& texture, const glm::vec2& position, const Color& tint = Color::White())
-            : Sprite(texture, position, texture.Size(), tint) {}
+        inline Sprite(bdl::Texture& texture, const glm::vec2& position, const std::optional<glm::ivec4>& source = {}, const Color& tint = Color::White())
+            : Sprite(texture, position, SWIZZLE_ZW(source.value_or({ 0, 0, texture.Size() })), source, tint) {}
     };
 
     export class Renderer final
@@ -195,7 +199,7 @@ void main()
             _whiteTexture = CreateTexture(white, { 1, 1 }, PixelFormat::RGBA8);
 
             glEnable(GL_BLEND);
-            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_DST_ALPHA);
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         }
 
         ~Renderer()
@@ -240,7 +244,7 @@ void main()
 
         inline void DrawFilledRect(const glm::vec2& pos, const glm::vec2& size, const Color& color)
         {
-            _sprites.emplace_back(*_whiteTexture, pos, size, color);
+            _sprites.emplace_back(*_whiteTexture, pos, size, std::optional<glm::ivec4>(), color);
         }
 
         void DrawRect(const glm::vec2& pos, const glm::vec2& size, int32_t borderSize, const Color& color)
@@ -251,10 +255,10 @@ void main()
             // 2       4
             // |       |
             // ----3----
-            _sprites.emplace_back(*_whiteTexture, pos, glm::vec2(size.x, borderSize), color);
-            _sprites.emplace_back(*_whiteTexture, pos, glm::vec2(borderSize, size.y), color);
-            _sprites.emplace_back(*_whiteTexture, glm::vec2(pos.x, pos.y + size.y - borderSize), glm::vec2(size.x, borderSize), color);
-            _sprites.emplace_back(*_whiteTexture, glm::vec2(pos.x + size.x - borderSize, pos.y), glm::vec2(borderSize, size.y), color);
+            _sprites.emplace_back(*_whiteTexture, pos, glm::vec2(size.x, borderSize), std::optional<glm::ivec4>(), color);
+            _sprites.emplace_back(*_whiteTexture, pos, glm::vec2(borderSize, size.y), std::optional<glm::ivec4>(), color);
+            _sprites.emplace_back(*_whiteTexture, glm::vec2(pos.x, pos.y + size.y - borderSize), glm::vec2(size.x, borderSize), std::optional<glm::ivec4>(), color);
+            _sprites.emplace_back(*_whiteTexture, glm::vec2(pos.x + size.x - borderSize, pos.y), glm::vec2(borderSize, size.y), std::optional<glm::ivec4>(), color);
         }
 
         void Present(uint32_t swapInterval)
@@ -287,10 +291,13 @@ void main()
                 uint32_t vOffset = numSprites * NumVertices;
                 uint32_t iOffset = numSprites * NumIndices;
 
-                _vertices[vOffset + 0] = { .Position = sprite.TopLeft, .TexCoord = { 0, 0 }, .Tint = sprite.Tint };
-                _vertices[vOffset + 1] = { .Position = sprite.TopRight, .TexCoord = { 1, 0 }, .Tint = sprite.Tint };
-                _vertices[vOffset + 2] = { .Position = sprite.BottomRight, .TexCoord = { 1, 1 }, .Tint = sprite.Tint };
-                _vertices[vOffset + 3] = { .Position = sprite.BottomLeft, .TexCoord = { 0, 1 }, .Tint = sprite.Tint };
+                glm::ivec2 texSize = sprite.Texture.Size();
+                glm::vec4 source = static_cast<glm::vec4>(sprite.Source.value_or({0, 0, sprite.Texture.Size()})) / glm::vec4(texSize, texSize);
+
+                _vertices[vOffset + 0] = { .Position = sprite.TopLeft, .TexCoord = { source.x, source.y }, .Tint = sprite.Tint };
+                _vertices[vOffset + 1] = { .Position = sprite.TopRight, .TexCoord = { source.x + source.z, source.y }, .Tint = sprite.Tint };
+                _vertices[vOffset + 2] = { .Position = sprite.BottomRight, .TexCoord = { source.x + source.z, source.y + source.w }, .Tint = sprite.Tint };
+                _vertices[vOffset + 3] = { .Position = sprite.BottomLeft, .TexCoord = { source.x, source.y + source.w }, .Tint = sprite.Tint };
 
                 _indices[iOffset + 0] = static_cast<uint16_t>(0 + vOffset);
                 _indices[iOffset + 1] = static_cast<uint16_t>(1 + vOffset);
