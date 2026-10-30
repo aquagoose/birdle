@@ -5,13 +5,20 @@ module;
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <SDL3/SDL.h>
+#define STB_IMAGE_IMPLEMENTATION
+#include <stb_image.h>
 
 #include <vector>
 #include <stdexcept>
 #include <format>
+#include <memory>
+#include <cassert>
+#include <optional>
+#include <functional>
 
 export module Framework:Renderer;
 import :Window;
+import :Texture;
 
 namespace bdl
 {
@@ -47,7 +54,7 @@ uniform sampler2D uTexture;
 
 void main()
 {
-    out_Color = vec4(1.0);
+    out_Color = texture(uTexture, frag_TexCoord) * frag_Tint;
 }
 )";
 
@@ -82,6 +89,7 @@ void main()
 
     export struct Sprite
     {
+        bdl::Texture& Texture;
         glm::ivec2 TopLeft;
         glm::ivec2 TopRight;
         glm::ivec2 BottomLeft;
@@ -169,6 +177,19 @@ void main()
             SDL_GL_DestroyContext(_context);
         }
 
+        std::unique_ptr<Texture> CreateTexture(const std::string& path)
+        {
+            int w, h;
+            void* data = stbi_load(path.c_str(), &w, &h, nullptr, 4);
+            if (!data)
+                throw std::runtime_error(std::format("Failed to load texture: {}", stbi_failure_reason()));
+
+            auto texture = std::unique_ptr<Texture>(new Texture(data, { w, h }, PixelFormat::RGBA8));
+            stbi_image_free(data);
+
+            return texture;
+        }
+
         void Clear(float r, float g, float b, float a)
         {
             glClearColor(r, g, b, a);
@@ -200,9 +221,18 @@ void main()
             auto vertices = static_cast<Vertex*>(glMapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY));
             auto indices = static_cast<uint16_t*>(glMapBuffer(GL_ELEMENT_ARRAY_BUFFER, GL_WRITE_ONLY));
 
+            std::optional<std::reference_wrapper<Texture>> currentTexture{};
             uint32_t numSprites = 0;
             for (const auto& sprite : _sprites)
             {
+                if (numSprites > 0 && &sprite.Texture != &currentTexture->get())
+                {
+                    Flush(*currentTexture, numSprites);
+                    numSprites = 0;
+                }
+
+                currentTexture = sprite.Texture;
+
                 uint32_t vOffset = numSprites * NumVertices;
                 uint32_t iOffset = numSprites * NumIndices;
 
@@ -224,17 +254,20 @@ void main()
             glUnmapBuffer(GL_ARRAY_BUFFER);
             glUnmapBuffer(GL_ELEMENT_ARRAY_BUFFER);
 
-            Flush(numSprites);
+            assert(currentTexture.has_value());
+            Flush(*currentTexture, numSprites);
 
             _sprites.clear();
         }
 
-        void Flush(uint32_t numSprites) const
+        void Flush(Texture& texture, uint32_t numSprites) const
         {
             glm::mat4 projection = glm::ortho(0.0f, 800.0f, 600.0f, 0.0f, -1.0f, 1.0f);
 
             glUseProgram(_program);
             glUniformMatrix4fv(glGetUniformLocation(_program, "uProjection"), 1, false, glm::value_ptr(projection));
+            glActiveTexture(GL_TEXTURE0);
+            glBindTexture(GL_TEXTURE_2D, texture.Handle());
             glDrawElements(GL_TRIANGLES, static_cast<GLint>(numSprites * NumIndices), GL_UNSIGNED_SHORT, nullptr);
         }
     };

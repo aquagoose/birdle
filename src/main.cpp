@@ -7,6 +7,8 @@ int main(int argc, char* argv[])
     auto window = new bdl::Window("Test", { 800, 600 });
     auto renderer = new bdl::Renderer(*window);
 
+    auto texture = renderer->CreateTexture("/home/aqua/Pictures/BAGELMIP.png");
+
     bool running = true;
     while (running)
     {
@@ -23,6 +25,7 @@ int main(int argc, char* argv[])
 
         renderer->Clear(1.0f, 0.5f, 0.25f, 1.0f);
         renderer->DrawSprite({
+            .Texture = *texture,
             .TopLeft = {0, 0},
             .TopRight = {100, 0},
             .BottomLeft = {0, 100},
@@ -32,6 +35,7 @@ int main(int argc, char* argv[])
         renderer->Present(1);
     }
 
+    texture.reset();
     delete renderer;
     delete window;
 }
