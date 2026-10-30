@@ -37,7 +37,7 @@ export namespace bdl
                 }
             }
 
-            _font->Draw(100, "Hello World!");
+            _font->Draw({ 0, 0 }, 75, "Hello World!\nThis is some text.\nthis is some more text.\ndsfgdghjkjnfghnjk", Color::White());
         }
     };
 }
