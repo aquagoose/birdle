@@ -16,7 +16,7 @@ export namespace bdl
     public:
         BirdleGame() : Framework("birdle", {800, 600})
         {
-            _font = std::make_unique<Font>("/home/aqua/Code/C#/Glimpse/src/Glimpse.Assets/Fonts/Roboto-Regular.ttf");
+            _font = std::make_unique<Font>(*Renderer, "/home/aqua/Code/C#/Glimpse/src/Glimpse.Assets/Fonts/Roboto-Regular.ttf");
         }
 
         void Draw() override
@@ -36,6 +36,8 @@ export namespace bdl
                     Renderer->DrawRect(pos, size, 1, { 0.5f, 0.5f, 0.5f, 1.0f });
                 }
             }
+
+            _font->Draw(100, "Hello World!");
         }
     };
 }

@@ -193,6 +193,9 @@ void main()
 
             uint8_t white[] = { 255, 255, 255, 255 };
             _whiteTexture = CreateTexture(white, { 1, 1 }, PixelFormat::RGBA8);
+
+            glEnable(GL_BLEND);
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_DST_ALPHA);
         }
 
         ~Renderer()

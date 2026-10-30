@@ -56,5 +56,11 @@ export namespace bdl
         [[nodiscard]] inline GLuint Handle() const { return _handle; }
 
         [[nodiscard]] inline glm::ivec2 Size() const { return _size; }
+
+        void Update(const glm::ivec2& pos, const glm::uvec2& size, void* data)
+        {
+            glBindTexture(GL_TEXTURE_2D, _handle);
+            glTexSubImage2D(GL_TEXTURE_2D, 0, pos.x, pos.y, size.x, size.y, GL_RGBA, GL_UNSIGNED_BYTE, data);
+        }
     };
 }
