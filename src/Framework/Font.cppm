@@ -22,7 +22,7 @@ export namespace bdl
     {
         struct Character
         {
-            Texture& Texture; // texture containing the character
+            Texture& Atlas; // atlas texture containing the character
             glm::ivec4 Source; // source rectangle
             glm::ivec2 Bearing; // horiz + vert bearing
             int32_t Advance; // horizontal advance
@@ -88,7 +88,7 @@ export namespace bdl
                 }
 
                 Character character = GetCharacter(size, c, scale);
-                _renderer.DrawSprite(Sprite(character.Texture,
+                _renderer.DrawSprite(Sprite(character.Atlas,
                     currentPos + glm::vec2(character.Bearing.x, character.Bearing.y + (ascent * scale) + (descent * scale)),
                     character.Source, color));
                 currentPos.x += character.Advance;
@@ -102,6 +102,7 @@ export namespace bdl
             // the hash is the a combination of the font size and codepoint
             uint64_t hash = (static_cast<uint64_t>(size) << 32) | c;
 
+            // find existing character
             auto chr = _characters.find(hash);
             if (chr != _characters.end())
                 return chr->second;
@@ -152,7 +153,7 @@ export namespace bdl
 
             Character character
             {
-                .Texture = *_atlases[_currentAtlas],
+                .Atlas = *_atlases[_currentAtlas],
                 .Source = glm::ivec4(_currentPos, w, h),
                 .Bearing = glm::ivec2(left, top),
                 .Advance = static_cast<int32_t>(advance * scale)
