@@ -37,7 +37,11 @@ export namespace bdl
                 }
             }
 
-            _font->Draw({ 0, 0 }, 75, "Hello World!\nThis is some text.\nthis is some more text.\ndsfgdghjkjnfghnjk", Color::White());
+            const std::string text = "Hello World!\nThis is some text.\nthis is some more text.\ndsfgdghjkjnfghnjk";
+            //const std::string text = "Hello World!";
+            auto textSize = _font->MeasureText(75, text);
+            Renderer->DrawFilledRect({ 0, 0 }, textSize, Color::Gray());
+            _font->Draw({ 0, 0 }, 75, text, Color::White());
         }
     };
 }

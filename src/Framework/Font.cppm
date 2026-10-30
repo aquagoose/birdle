@@ -97,6 +97,37 @@ export namespace bdl
             }
         }
 
+        glm::uvec2 MeasureText(uint32_t size, const std::string_view& text)
+        {
+            int ascent, descent;
+            stbtt_GetFontVMetrics(&_font, &ascent, &descent, nullptr);
+            float scale = stbtt_ScaleForPixelHeight(&_font, size);
+
+            glm::uvec2 textSize(0, ascent * scale + descent * scale);
+            uint32_t currentX = 0;
+
+            for (const char c : text)
+            {
+                switch (c)
+                {
+                    case '\n':
+                    {
+                        currentX = 0;
+                        textSize.y += ascent * scale;
+                        continue;
+                    }
+                }
+
+                Character character = GetCharacter(size, c, scale);
+                currentX += character.Advance;
+
+                if (currentX >= textSize.x)
+                    textSize.x = currentX;
+            }
+
+            return textSize;
+        }
+
     private:
         Character GetCharacter(uint32_t size, uint32_t c, float scale)
         {
