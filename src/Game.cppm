@@ -18,7 +18,8 @@ export namespace bdl
         {
             None, // no status
             InWord, // the character is in the word, but not at this location
-            Correct // the character is in the word and is in the correct location
+            Correct, // the character is in the word and is in the correct location
+            Invalid // the character is not valid
         };
 
         struct Character
@@ -41,6 +42,29 @@ export namespace bdl
         void InsertChar(int row, int column, char c)
         {
             _chars[row * WordLength + column] = { .Chr = c, .Status = CharacterStatus::None };
+        }
+
+        bool CheckWord()
+        {
+            assert(_word.size() == WordLength);
+            assert(_currentColumn == WordLength);
+            bool correct = true;
+
+            for (int i = 0; i < WordLength; i++)
+            {
+                Character& character = _chars[_currentRow * WordLength + i];
+                if (character.Chr == _word[i])
+                    character.Status = CharacterStatus::Correct;
+                else if (_word.find(character.Chr) != std::string::npos)
+                {
+                    correct = false;
+                    character.Status = CharacterStatus::InWord;
+                }
+                else
+                    correct = false;
+            }
+
+            return correct;
         }
 
     public:
@@ -69,6 +93,37 @@ export namespace bdl
                 if (_currentColumn - 1 >= 0)
                     InsertChar(_currentRow, --_currentColumn, 0);
             }
+
+            if (IsKeyPressed(SDLK_RETURN))
+            {
+                if (_currentColumn < WordLength)
+                {
+                    for (int i = 0; i < WordLength; i++)
+                    {
+                        Character& character = _chars[_currentRow * WordLength + i];
+                        character.Status = CharacterStatus::Invalid;
+                    }
+                }
+                else
+                {
+                    if (CheckWord())
+                    {
+                        std::cout << "You got it right!" << std::endl;
+                        Close();
+                    }
+                    else
+                    {
+                        _currentColumn = 0;
+                        _currentRow++;
+
+                        if (_currentRow >= NumWords)
+                        {
+                            std::cout << "You lost! The word was " << _word << std::endl;
+                            Close();
+                        }
+                    }
+                }
+            }
         }
 
         void Draw() override
@@ -86,11 +141,28 @@ export namespace bdl
                 const Character& character = _chars[i];
 
                 glm::ivec2 pos = startPos + glm::ivec2(x * (size.x + spacing), y * (size.y + spacing));
-                Renderer->DrawFilledRect(pos, size, { 0.05f, 0.05f, 0.05f, 1.0f });
+
+                Color bgColor = { 0.05f, 0.05f, 0.05f, 1.0f };
+                switch (character.Status)
+                {
+                    case CharacterStatus::None:
+                        break;
+                    case CharacterStatus::InWord:
+                        bgColor = Color::Yellow();
+                        break;
+                    case CharacterStatus::Correct:
+                        bgColor = Color::Green();
+                        break;
+                    case CharacterStatus::Invalid:
+                        bgColor = Color::DarkRed();
+                        break;
+                }
+
+                Renderer->DrawFilledRect(pos, size, bgColor);
                 Renderer->DrawRect(pos, size, 1, { 0.5f, 0.5f, 0.5f, 1.0f });
 
                 // get the character as a string view. is this a hack? probably. but it works!
-                std::string_view chr(&_chars[i].Chr, 1);
+                std::string_view chr(&character.Chr, 1);
                 glm::uvec2 textSize = _font->MeasureText(50, chr);
                 glm::ivec2 textPos = pos + size / 2 - static_cast<glm::ivec2>(textSize / 2U);
                 _font->Draw(textPos, 50, chr, Color::White());

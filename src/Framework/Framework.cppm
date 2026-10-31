@@ -84,6 +84,11 @@ export namespace bdl
             }
         }
 
+        void Close()
+        {
+            _running = false;
+        }
+
         inline bool IsKeyPressed(SDL_Keycode key) const { return _keysPressed.contains(key); }
     };
 }
