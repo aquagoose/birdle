@@ -6,6 +6,7 @@ module;
 #include <memory>
 #include <vector>
 #include <iostream>
+#include <fstream>
 
 export module Birdle;
 import Birdle.Framework;
@@ -34,6 +35,7 @@ export namespace bdl
         std::unique_ptr<Font> _font;
         std::vector<Character> _chars;
 
+        std::vector<std::string> _wordbank;
         std::string _word;
 
         int _currentRow{};
@@ -46,7 +48,7 @@ export namespace bdl
 
         bool CheckWord()
         {
-            assert(_word.size() == WordLength);
+            assert(_word.length() == WordLength);
             assert(_currentColumn == WordLength);
             bool correct = true;
 
@@ -73,7 +75,24 @@ export namespace bdl
             _font = std::make_unique<Font>(*Renderer, "Content/Roboto-Medium.ttf");
             _chars.resize(WordLength * NumWords);
 
-            _word = "PLANE";
+            std::ifstream bankFile("Content/Banks/5.wb");
+            if (!bankFile.is_open())
+                throw std::runtime_error("Failed to open word bank file!");
+
+            std::string line;
+            while (std::getline(bankFile, line))
+            {
+                if (line.empty() || line.starts_with('#'))
+                    continue;
+
+                assert(line.length() == 5);
+                _wordbank.push_back(line);
+            }
+
+            // yes i am using srand no i am not doing anything about it
+            srand(time(nullptr));
+            int wordIndex = rand() % _wordbank.size();
+            _word = _wordbank[wordIndex];
         }
 
         void Loop(float dt) override
