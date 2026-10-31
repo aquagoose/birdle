@@ -23,6 +23,9 @@ target_link_libraries(birdle PRIVATE glad)
 add_subdirectory(lib/stb)
 target_link_libraries(birdle PRIVATE stb)
 
+add_subdirectory(lib/cpptrace)
+target_link_libraries(birdle PRIVATE cpptrace::cpptrace)
+
 add_custom_command(
         TARGET birdle
         COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/Content ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/Content
