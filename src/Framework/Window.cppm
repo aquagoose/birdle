@@ -30,10 +30,16 @@ export namespace bdl
             Handle = SDL_CreateWindow(title.c_str(), size.x, size.y, SDL_WINDOW_OPENGL);
             if (!Handle)
                 throw std::runtime_error(std::format("Failed to create window: {}", SDL_GetError()));
+
+            // the game basically always wants text input
+            // so just disable the on-screen keyboard and leave text input enabled
+            SDL_SetHint(SDL_HINT_ENABLE_SCREEN_KEYBOARD, "0");
+            SDL_StartTextInput(Handle);
         }
 
         ~Window()
         {
+            SDL_StopTextInput(Handle);
             SDL_DestroyWindow(Handle);
             SDL_Quit();
         }

@@ -5,6 +5,8 @@ module;
 
 #include <memory>
 #include <string>
+#include <deque>
+#include <unordered_set>
 
 export module Birdle.Framework;
 export import :Window;
@@ -23,6 +25,9 @@ export namespace bdl
         std::unique_ptr<bdl::Window> Window{};
         std::unique_ptr<bdl::Renderer> Renderer{};
 
+        std::unordered_set<SDL_Keycode> _keysPressed;
+        std::deque<char> InputQueue;
+
         Framework(const std::string& appName, const glm::ivec2& windowSize)
         {
             Window = std::make_unique<bdl::Window>(appName, windowSize);
@@ -39,6 +44,8 @@ export namespace bdl
             _running = true;
             while (_running)
             {
+                _keysPressed.clear();
+
                 SDL_Event event;
                 while (SDL_PollEvent(&event))
                 {
@@ -47,6 +54,26 @@ export namespace bdl
                         case SDL_EVENT_QUIT:
                             _running = false;
                             break;
+
+                        case SDL_EVENT_KEY_DOWN:
+                        {
+                            if (event.key.repeat)
+                                break;
+                            _keysPressed.emplace(event.key.key);
+                            break;
+                        }
+                        case SDL_EVENT_KEY_UP:
+                        {
+                            _keysPressed.erase(event.key.key);
+                            break;
+                        }
+
+                        case SDL_EVENT_TEXT_INPUT:
+                        {
+                            size_t length = SDL_strlen(event.text.text);
+                            for (size_t i = 0; i < length; i++)
+                                InputQueue.push_back(event.text.text[i]);
+                        }
                     }
                 }
 
@@ -56,5 +83,7 @@ export namespace bdl
                 Renderer->Present(1);
             }
         }
+
+        inline bool IsKeyPressed(SDL_Keycode key) const { return _keysPressed.contains(key); }
     };
 }
