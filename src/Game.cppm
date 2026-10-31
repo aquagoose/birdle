@@ -9,6 +9,7 @@ module;
 #include <fstream>
 
 export module Birdle;
+import :Utils;
 import Birdle.Framework;
 
 export namespace bdl
@@ -75,19 +76,7 @@ export namespace bdl
             _font = std::make_unique<Font>(*Renderer, "Content/Roboto-Medium.ttf");
             _chars.resize(WordLength * NumWords);
 
-            std::ifstream bankFile("Content/Banks/5.wb");
-            if (!bankFile.is_open())
-                throw std::runtime_error("Failed to open word bank file!");
-
-            std::string line;
-            while (std::getline(bankFile, line))
-            {
-                if (line.empty() || line.starts_with('#'))
-                    continue;
-
-                assert(line.length() == 5);
-                _wordbank.push_back(line);
-            }
+            _wordbank = Utils::LoadWordbank("Content/Banks/5.wb");
 
             // yes i am using srand no i am not doing anything about it
             srand(time(nullptr));
