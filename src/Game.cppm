@@ -91,7 +91,8 @@ export namespace bdl
                 if (_currentColumn + 1 > WordLength)
                     break;
 
-                InsertChar(_currentRow, _currentColumn++, std::toupper(c));
+                if (c >= 'A' && c <= 'Z' || c >= 'a' && c <= 'z')
+                    InsertChar(_currentRow, _currentColumn++, std::toupper(c));
             }
 
             InputQueue.clear();
