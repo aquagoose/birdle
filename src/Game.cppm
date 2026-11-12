@@ -19,6 +19,7 @@ export namespace bdl
         enum class CharacterStatus
         {
             None, // no status
+            Incorrect, // incorrect character
             InWord, // the character is in the word, but not at this location
             Correct, // the character is in the word and is in the correct location
             Invalid // the character is not valid
@@ -64,7 +65,10 @@ export namespace bdl
                     character.Status = CharacterStatus::InWord;
                 }
                 else
+                {
+                    character.Status = CharacterStatus::Incorrect;
                     correct = false;
+                }
             }
 
             return correct;
@@ -156,6 +160,9 @@ export namespace bdl
                 {
                     case CharacterStatus::None:
                         break;
+                    case CharacterStatus::Incorrect:
+                        bgColor = Color::Gray();
+                        break;
                     case CharacterStatus::InWord:
                         bgColor = Color::Yellow();
                         break;
@@ -165,7 +172,7 @@ export namespace bdl
                     case CharacterStatus::Invalid:
                         bgColor = Color::DarkRed();
                         break;
-                }
+                    }
 
                 Renderer->DrawFilledRect(pos, size, bgColor);
                 Renderer->DrawRect(pos, size, 1, { 0.5f, 0.5f, 0.5f, 1.0f });
