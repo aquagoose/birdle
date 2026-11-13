@@ -1,3 +1,4 @@
+#include <SDL3/SDL_main.h>
 #include <cpptrace/from_current.hpp>
 #include <iostream>
 
@@ -20,4 +21,6 @@ int main(int argc, char* argv[])
         cpptrace::from_current_exception().print(std::cout);
     }
 #endif
+
+    return 0;
 }

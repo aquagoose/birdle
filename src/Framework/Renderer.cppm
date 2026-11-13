@@ -8,6 +8,7 @@ module;
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 
+#include <array>
 #include <vector>
 #include <stdexcept>
 #include <format>
@@ -25,7 +26,7 @@ import :Types;
 
 namespace bdl
 {
-    static const char* VertexShader = R"(
+    constexpr inline const char* VertexShader = R"(
 #version 330 core
 
 in vec2 aPosition;
@@ -45,7 +46,7 @@ void main()
 }
 )";
 
-    static const char* FragmentShader = R"(
+    constexpr inline const char* FragmentShader = R"(
 #version 330 core
 
 in vec2 frag_TexCoord;
