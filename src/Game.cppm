@@ -3,10 +3,14 @@ module;
 #include <glm/glm.hpp>
 #include <SDL3/SDL.h>
 
+#include <algorithm>
 #include <memory>
 #include <vector>
 #include <iostream>
 #include <fstream>
+
+#define NUM_POSSIBLE_CHARS (('Z' - 'A') + 1)
+#define CHAR_TO_INDEX(c) (c - 'A')
 
 export module Birdle;
 import :Utils;
@@ -25,6 +29,14 @@ export namespace bdl
             Invalid // the character is not valid
         };
 
+        enum class EvalResult
+        {
+            TooShort, // the word is too short
+            InvalidWord, // the word is not valid or in the dictionary
+            Incorrect, // the word is not the correct word
+            Correct // the word is correct!
+        };
+
         struct Character
         {
             char Chr;
@@ -39,6 +51,7 @@ export namespace bdl
 
         std::vector<std::string> _wordbank;
         std::string _word;
+        char _charCount[NUM_POSSIBLE_CHARS] = {};
 
         int _currentRow{};
         int _currentColumn{};
@@ -48,18 +61,32 @@ export namespace bdl
             _chars[row * WordLength + column] = { .Chr = c, .Status = CharacterStatus::None };
         }
 
-        bool CheckWord()
+        EvalResult EvaluateWord()
         {
             assert(_word.length() == WordLength);
-            assert(_currentColumn == WordLength);
+
+            if (_currentColumn < WordLength)
+                return EvalResult::TooShort;
+
+            std::string word(WordLength, '\0');
+            for (int i = 0; i < WordLength; i++)
+                word[i] = _chars[_currentRow * WordLength + i].Chr;
+
+            // try to find the word in the dictionary
+            if (std::ranges::find(_wordbank, word) == _wordbank.end())
+                return EvalResult::InvalidWord;
+
             bool correct = true;
+            int counter[NUM_POSSIBLE_CHARS] = {};
 
             for (int i = 0; i < WordLength; i++)
             {
                 Character& character = _chars[_currentRow * WordLength + i];
-                if (character.Chr == _word[i])
+                int index = CHAR_TO_INDEX(character.Chr);
+
+                if (character.Chr == _word[i] && counter[index] < 0 && counter[index] < _charCount[index])
                     character.Status = CharacterStatus::Correct;
-                else if (_word.find(character.Chr) != std::string::npos)
+                else if (_word.find(character.Chr) != std::string::npos && counter[index] < _charCount[index])
                 {
                     correct = false;
                     character.Status = CharacterStatus::InWord;
@@ -69,9 +96,11 @@ export namespace bdl
                     character.Status = CharacterStatus::Incorrect;
                     correct = false;
                 }
+
+                counter[index]++;
             }
 
-            return correct;
+            return correct ? EvalResult::Correct : EvalResult::Incorrect;
         }
 
     public:
@@ -86,6 +115,9 @@ export namespace bdl
             srand(time(nullptr));
             int wordIndex = rand() % _wordbank.size();
             _word = _wordbank[wordIndex];
+
+            for (char c : _word)
+                _charCount[CHAR_TO_INDEX(c)]++;
         }
 
         void Loop(float dt) override
@@ -109,22 +141,21 @@ export namespace bdl
 
             if (IsKeyPressed(SDLK_RETURN))
             {
-                if (_currentColumn < WordLength)
+                EvalResult result = EvaluateWord();
+                switch (result)
                 {
-                    for (int i = 0; i < WordLength; i++)
+                    case EvalResult::TooShort:
+                    case EvalResult::InvalidWord:
                     {
-                        Character& character = _chars[_currentRow * WordLength + i];
-                        character.Status = CharacterStatus::Invalid;
+                        for (int i = 0; i < WordLength; i++)
+                        {
+                            Character& character = _chars[_currentRow * WordLength + i];
+                            character.Status = CharacterStatus::Invalid;
+                        }
+                        break;
                     }
-                }
-                else
-                {
-                    if (CheckWord())
-                    {
-                        std::cout << "You got it right!" << std::endl;
-                        Close();
-                    }
-                    else
+
+                    case EvalResult::Incorrect:
                     {
                         _currentColumn = 0;
                         _currentRow++;
@@ -134,6 +165,14 @@ export namespace bdl
                             std::cout << "You lost! The word was " << _word << std::endl;
                             Close();
                         }
+                        break;
+                    }
+
+                    case EvalResult::Correct:
+                    {
+                        std::cout << "You got it right!" << std::endl;
+                        Close();
+                        break;
                     }
                 }
             }
